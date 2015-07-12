@@ -7,17 +7,6 @@
     android:background="@color/blue"
     tools:context="outsidehacks.com.outsidehacks.RecordActivity">
 
-    <ImageButton
-        android:layout_width="75dip"
-        android:layout_height="75dip"
-        android:background="@android:color/transparent"
-        android:scaleType="centerCrop"
-        android:id="@+id/record_button"
-        android:src="@mipmap/mic_default_tan"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
-        android:enabled="false" />
-
     <Spinner
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -25,13 +14,26 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
 
+    <ImageButton
+        android:layout_width="75dip"
+        android:layout_height="75dip"
+        android:background="@android:color/transparent"
+        android:scaleType="centerCrop"
+        android:id="@+id/record_button"
+        android:src="@mipmap/mic_default_tan"
+        android:layout_below="@+id/spin_artist"
+        android:layout_marginTop="50dip"
+        android:layout_centerHorizontal="true"
+        android:enabled="false" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/countdown_textview"
+        android:fontFamily="sans-serif-condensed"
         android:layout_below="@+id/record_button"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="30dp"
-        android:textSize="25dp" />
+        android:layout_marginTop="50dp"
+        android:textSize="50sp" />
 </RelativeLayout>
 

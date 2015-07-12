@@ -271,7 +271,7 @@ public class RecordActivity extends ActionBarActivity implements AdapterView.OnI
                     Toast.makeText(RecordActivity.this, "Please Select an Artist", Toast.LENGTH_LONG).show();
                 } else {
                     final ProgressDialog progress = new ProgressDialog(RecordActivity.this);
-                    progress.setTitle("Analyzing");
+                    progress.setTitle("Analyzing Audio");
                     progress.setMessage("Hittin up " + artist + "...");
                     progress.show();
 

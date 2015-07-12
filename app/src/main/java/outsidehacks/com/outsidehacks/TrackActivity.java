@@ -43,6 +43,7 @@ public class TrackActivity extends ActionBarActivity {
     private EditText trackET;
     private ImageView trackAlbumIV;
     private Button saveTrackToSpotifyBtn;
+    private Button cancelBtn;
     private TextView artistTV;
     private TextView trackTV;
 
@@ -51,6 +52,7 @@ public class TrackActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_track);
         saveTrackToSpotifyBtn = (Button)findViewById(R.id.btn_save_track);
+        cancelBtn = (Button)findViewById(R.id.btn_cancel);
         trackAlbumIV = (ImageView)findViewById(R.id.iv_track);
         trackTV = (TextView)findViewById(R.id.tv_title);
         artistTV = (TextView)findViewById(R.id.tv_artist);
@@ -70,26 +72,42 @@ public class TrackActivity extends ActionBarActivity {
             public void onClick(View v) {
                 if (retrievedTrack != null) {
                     saveSongToSpotifyPlaylist(spotify, retrievedTrack);
-                } else {
-                    Toast.makeText(getApplicationContext(), "Song Not On Spotify :(", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
+        cancelBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                moveToRecordingActivity();
+            }
+        });
 
 
     }
 
     public void retrieveSongFromSpotify(SpotifyService spotify, final String artistQuery, final String songQuery) {
+        Log.v("TrackActivity", artistQuery + " " + songQuery);
         spotify.searchTracks(songQuery, new SpotifyCallback<TracksPager>() {
             @Override
             public void failure(SpotifyError spotifyError) {
                 Log.v("TrackActivity", "Error: " + spotifyError);
+                Toast.makeText(getApplicationContext(), "Song Not On Spotify :(", Toast.LENGTH_SHORT).show();
+                trackTV.setText(getIntent().getStringExtra("song") + " Not On Spotify");
+                artistTV.setText(getIntent().getStringExtra("artist") + " Not On Spotify");
             }
 
             @Override
             public void success(TracksPager tracksPager, Response response) {
                 List<Track> tracks = tracksPager.tracks.items;
+
+                if (tracks.size() == 0) {
+                    Toast.makeText(getApplicationContext(), "Song Not On Spotify :(", Toast.LENGTH_SHORT).show();
+                    trackTV.setText(getIntent().getStringExtra("song") + " Not On Spotify");
+                    artistTV.setText(getIntent().getStringExtra("artist") + " Not On Spotify");
+                    return;
+                }
+
                 for (Track track: tracks) {
 //                            Log.v("TrackActivity", track.name);
                     List<ArtistSimple> artists = track.artists;
@@ -102,8 +120,8 @@ public class TrackActivity extends ActionBarActivity {
                             retrievedTrack = track;
                             return;
                         } else {
-                            Log.v("TrackActivity",artist.name.toLowerCase().replace(" ", "") + " to " + artistQuery.toLowerCase().replace(" ", ""));
-                            Log.v("TrackActivity", artist.name + " : " + track.name);
+//                            Log.v("TrackActivity",artist.name.toLowerCase().replace(" ", "") + " to " + artistQuery.toLowerCase().replace(" ", ""));
+//                            Log.v("TrackActivity", artist.name + " : " + track.name);
                         }
                     }
                 }
@@ -124,6 +142,7 @@ public class TrackActivity extends ActionBarActivity {
             @Override
             public void success(Pager<PlaylistTrack> playlistTrackPager, Response response) {
                 Log.v("TrackActivity", "Successfully added to playlist");
+                Toast.makeText(getApplicationContext(), "Saved To Spotify Playlist :)", Toast.LENGTH_LONG).show();
                 moveToRecordingActivity();
                 return;
             }

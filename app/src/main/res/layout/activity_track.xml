@@ -41,8 +41,9 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Title"
+        android:text="Not Found :("
         android:id="@+id/tv_title"
+        android:gravity="center"
         android:layout_marginTop="20dp"
         android:textColor="#FFFFFF"
         android:fontFamily="sans-serif-light"
@@ -53,7 +54,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Artist"
+        android:text=""
+        android:gravity="center"
         android:textColor="#FFFFFF"
         android:id="@+id/tv_artist"
         android:textSize="20sp"
@@ -65,7 +67,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Similar Artists"
+        android:text=""
+        android:gravity="center"
         android:textColor="#FFFFFF"
         android:id="@+id/tv_info"
         android:textSize="15sp"
