@@ -176,7 +176,7 @@ public class LoginActivity extends Activity implements PlayerNotificationCallbac
     }
 
     public void moveToTrackActivity() {
-        Intent intent = new Intent(this, TrackActivity.class);
+        Intent intent = new Intent(this, RecordActivity.class);
         intent.putExtra("ACCESS_TOKEN", ACCESS_TOKEN);
         intent.putExtra("USER_ID", USER_ID);
         intent.putExtra("PLAYLIST_ID", PLAYLIST_ID);

@@ -7,11 +7,13 @@
     android:background="@color/blue"
     tools:context="outsidehacks.com.outsidehacks.RecordActivity">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Record"
+    <ImageButton
+        android:layout_width="75dip"
+        android:layout_height="75dip"
+        android:background="@android:color/transparent"
+        android:scaleType="centerCrop"
         android:id="@+id/record_button"
+        android:src="@mipmap/mic_default_tan"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
         android:enabled="false" />

@@ -7,8 +7,10 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -51,14 +53,14 @@ public class RecordActivity extends ActionBarActivity {
 
     private String userID = null;
 
-    Button recordButton = null;
+    ImageButton recordButton = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record);
 
-        this.recordButton = (Button) this.findViewById(R.id.record_button);
+        this.recordButton = (ImageButton)this.findViewById(R.id.record_button);
 
         final SharedPreferences sharedPrefs = getSharedPreferences(SHARED_PREFS_FILENAME, MODE_PRIVATE);
         String userID = sharedPrefs.getString(USER_ID_KEY, null);
@@ -153,7 +155,8 @@ public class RecordActivity extends ActionBarActivity {
         this.recordButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                System.out.println("Record Button Pressed");
+                recordButton.setImageDrawable(getResources().getDrawable(R.mipmap.mic_recording_tan));
+                Log.v("RecordActivity", "Record Button Pressed");
                 RecordActivity.this.startRecording();
             }
         });
@@ -195,6 +198,7 @@ public class RecordActivity extends ActionBarActivity {
                 // Stop recording and upload file
                 extAudioRecorder.stop();
                 extAudioRecorder.release();
+                recordButton.setImageDrawable(getResources().getDrawable(R.mipmap.mic_default_tan));
 
                 uploadRecordingFile(recordingFile, getSelectedArtist(), new Callback<JSONObject>() {
                     @Override
