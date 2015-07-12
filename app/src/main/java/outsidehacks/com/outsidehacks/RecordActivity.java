@@ -54,13 +54,15 @@ public class RecordActivity extends ActionBarActivity implements AdapterView.OnI
 
     private static final int RECORDING_LENGTH_SECONDS = 9;
 
+    private static final double CONFIDENCE_THRESH = 0.6;
+
     private static final int RECORDER_SAMPLERATE = 44100;
     private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_STEREO;
     private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
 
-    private String SPOTIFY_ACCESS_TOKEN;
-    private String SPOTIFY_USER_ID;
-    private String SPOTIFY_PLAYLIST_ID;
+    private static String SPOTIFY_ACCESS_TOKEN;
+    private static String SPOTIFY_USER_ID;
+    private static String SPOTIFY_PLAYLIST_ID;
 
     private String userID = null;
 
@@ -281,13 +283,18 @@ public class RecordActivity extends ActionBarActivity implements AdapterView.OnI
                             progress.dismiss();
 
                             try {
-                                String artist = result.getString("artist");
-                                String song = result.getString("song");
+                                if (passesThreshold(result)) {
+                                    String artist = result.getString("artist");
+                                    String song = result.getString("song");
 
-                                String msg = "Artist: " + artist + ", Song: " + song;
-                                System.out.println(msg);
+                                    String msg = "Artist: " + artist + ", Song: " + song;
+                                    System.out.println(msg);
 
-                                startTrackActivity(artist, song);
+                                    startTrackActivity(artist, song);
+                                } else {
+                                    Toast.makeText(RecordActivity.this, "Couldn't find a match", Toast.LENGTH_LONG).show();
+                                }
+
                             } catch (JSONException e) {
                                 e.printStackTrace();
                                 showErrorDialog();
@@ -318,6 +325,12 @@ public class RecordActivity extends ActionBarActivity implements AdapterView.OnI
         }.start();
     }
 
+    private boolean passesThreshold(JSONObject identifiedSong) throws JSONException {
+        Log.d("Record", identifiedSong.toString());
+        double confidence = identifiedSong.getDouble("confidence");
+        return confidence >= CONFIDENCE_THRESH;
+    }
+
     public void startTrackActivity(String artist, String song) {
         // Start TrackActivity
         Intent trackIntent = new Intent(RecordActivity.this, TrackActivity.class);
@@ -344,8 +357,12 @@ public class RecordActivity extends ActionBarActivity implements AdapterView.OnI
                     JSONArray matches = resObj.getJSONArray("matches");
                     JSONObject match = matches.getJSONObject(0); // Ordered by descending certainty
                     String songName = match.getString("song_name");
+                    double confidence = match.getDouble("match_score");
 
-                    JSONObject result = new JSONObject().put("song", songName).put("artist", artist);
+                    JSONObject result = new JSONObject()
+                            .put("song", songName)
+                            .put("artist", artist)
+                            .put("confidence", confidence);
 
                     cb.success(result, response);
                 } catch (IOException e) {
