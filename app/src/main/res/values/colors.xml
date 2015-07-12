@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="blue" type="color">#FF4DCFDA</item>
+    <item name="red" type="color">#FFE80039</item>
+    <item name="tan" type="color">#FFFFCC5F</item>
+</resources>
