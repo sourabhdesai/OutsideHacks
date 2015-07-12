@@ -160,7 +160,7 @@ public class RecordActivity extends ActionBarActivity {
     }
 
     private String getSelectedArtist() {
-        return "TV On The Radio";
+        return "Death Cab For Cutie";
     }
 
     private void startRecording() {
@@ -217,6 +217,8 @@ public class RecordActivity extends ActionBarActivity {
 
                     @Override
                     public void failure(RetrofitError error) {
+                        Toast.makeText(RecordActivity.this, "Couldn't find a match", Toast.LENGTH_LONG).show();
+
                         error.printStackTrace();
                         byte[] bodyBuff = new byte[(int) error.getResponse().getBody().length()];
                         try {
@@ -225,7 +227,6 @@ public class RecordActivity extends ActionBarActivity {
                             e.printStackTrace();
                         }
                         System.err.print("RetrofitError: \n" + new String(bodyBuff));
-                        showErrorDialog();
                     }
                 });
             }
