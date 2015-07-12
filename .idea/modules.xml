@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/OutsideHacks.iml" filepath="$PROJECT_DIR$/OutsideHacks.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/java-json/java-json.iml" filepath="$PROJECT_DIR$/java-json/java-json.iml" />
       <module fileurl="file://$PROJECT_DIR$/spotify-auth-1.0.0-beta10/spotify-auth-1.0.0-beta10.iml" filepath="$PROJECT_DIR$/spotify-auth-1.0.0-beta10/spotify-auth-1.0.0-beta10.iml" />
       <module fileurl="file://$PROJECT_DIR$/spotify-player-1.0.0-beta10/spotify-player-1.0.0-beta10.iml" filepath="$PROJECT_DIR$/spotify-player-1.0.0-beta10/spotify-player-1.0.0-beta10.iml" />
       <module fileurl="file://$PROJECT_DIR$/spotify-web-api-android-0.1.0/spotify-web-api-android-0.1.0.iml" filepath="$PROJECT_DIR$/spotify-web-api-android-0.1.0/spotify-web-api-android-0.1.0.iml" />
