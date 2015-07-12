@@ -48,7 +48,7 @@ public class LoginActivity extends Activity implements PlayerNotificationCallbac
     // Request code that will be used to verify if the result comes from correct activity
     // Can be any integer
     private static final int REQUEST_CODE = 1337;
-    private static final String PLAYLIST_DEFAULT = "OutsideHacks";
+    private static final String PLAYLIST_DEFAULT = "Outside Lands 2015";
     private static String ACCESS_TOKEN;
     private static String USER_ID;
     private static String PLAYLIST_ID;

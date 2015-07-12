@@ -7,6 +7,13 @@
     android:background="@color/blue"
     tools:context="outsidehacks.com.outsidehacks.RecordActivity">
 
+    <Spinner
+        android:layout_width="200dip"
+        android:layout_height="75dip"
+        android:id="@+id/spin_artist"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
     <ImageButton
         android:layout_width="75dip"
         android:layout_height="75dip"
@@ -14,24 +21,17 @@
         android:scaleType="centerCrop"
         android:id="@+id/record_button"
         android:src="@mipmap/mic_default_tan"
-        android:layout_centerVertical="true"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:enabled="false" />
-
-    <Spinner
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/spin_artist"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/countdown_textview"
-        android:layout_below="@+id/record_button"
+        android:fontFamily="sans-serif-condensed"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="30dp"
-        android:textSize="25dp" />
+        android:layout_centerVertical="true"
+        android:textSize="60sp" />
 </RelativeLayout>
 

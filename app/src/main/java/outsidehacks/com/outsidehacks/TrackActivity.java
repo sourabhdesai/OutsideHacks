@@ -1,5 +1,6 @@
 package outsidehacks.com.outsidehacks;
 
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -35,13 +37,13 @@ public class TrackActivity extends ActionBarActivity {
     private static String ACCESS_TOKEN;
     private static String USER_ID;
     private static String PLAYLIST_ID;
-    private String artistQuery;
-    private String trackQuery;
+    private Track retrievedTrack;
 
     private EditText artistET;
     private EditText trackET;
     private ImageView trackAlbumIV;
     private Button saveTrackToSpotifyBtn;
+    private Button cancelBtn;
     private TextView artistTV;
     private TextView trackTV;
 
@@ -49,9 +51,8 @@ public class TrackActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_track);
-        artistET = (EditText)findViewById(R.id.et_artist);
-        trackET = (EditText)findViewById(R.id.et_track);
         saveTrackToSpotifyBtn = (Button)findViewById(R.id.btn_save_track);
+        cancelBtn = (Button)findViewById(R.id.btn_cancel);
         trackAlbumIV = (ImageView)findViewById(R.id.iv_track);
         trackTV = (TextView)findViewById(R.id.tv_title);
         artistTV = (TextView)findViewById(R.id.tv_artist);
@@ -64,72 +65,92 @@ public class TrackActivity extends ActionBarActivity {
         api.setAccessToken(ACCESS_TOKEN);
         final SpotifyService spotify = api.getService();
 
+        retrieveSongFromSpotify(spotify, getIntent().getStringExtra("artist"), getIntent().getStringExtra("song"));
+
         saveTrackToSpotifyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                artistQuery = artistET.getText().toString();
-                trackQuery = trackET.getText().toString();
-                String query = trackQuery.replace(" ", "+") + '+' + artistQuery.replace(" ", "+");
-                Log.v("TrackActivity", query);
-//                Map<String, Object> options = new HashMap<String, Object>();
-//                options.put()
-//                spotify.searchTracks(query, options, new SpotifyCallback<TracksPager>() {
-//                    @Override
-//                    public void failure(SpotifyError spotifyError) {
-//
-//                    }
-//
-//                    @Override
-//                    public void success(TracksPager tracksPager, Response response) {
-//
-//                    }
-//                });
-                spotify.searchTracks(trackQuery, new SpotifyCallback<TracksPager>() {
-                    @Override
-                    public void failure(SpotifyError spotifyError) {
-                        Log.v("TrackActivity", "Error: " + spotifyError);
-                    }
+                if (retrievedTrack != null) {
+                    saveSongToSpotifyPlaylist(spotify, retrievedTrack);
+                }
+            }
+        });
 
-                    @Override
-                    public void success(TracksPager tracksPager, Response response) {
-                        List<Track> tracks = tracksPager.tracks.items;
-                        for (Track track: tracks) {
-//                            Log.v("TrackActivity", track.name);
-                            List<ArtistSimple> artists = track.artists;
-                            for (ArtistSimple artist: artists) {
-                                if(artist.name.toLowerCase().replace(" ", "").equals(artistQuery.toLowerCase().replace(" ", ""))){
-                                    Log.v("TrackActivity", "Track Selected: " + track.name);
-                                    trackTV.setText(track.name);
-                                    artistTV.setText(artist.name);
-                                    Picasso.with(getApplicationContext()).load(track.album.images.get(0).url).into(trackAlbumIV);
-                                    Map<String, Object> parameters = new HashMap<String, Object>();
-                                    parameters.put("uris", track.uri);
-                                    spotify.addTracksToPlaylist(USER_ID, PLAYLIST_ID, parameters, parameters, new SpotifyCallback<Pager<PlaylistTrack>>() {
-                                        @Override
-                                        public void failure(SpotifyError spotifyError) {
-                                            Log.v("TrackActivity", "Error: " + spotifyError);
-                                        }
-
-                                        @Override
-                                        public void success(Pager<PlaylistTrack> playlistTrackPager, Response response) {
-                                            Log.v("TrackActivity", "Successfully added to playlist");
-                                        }
-                                    });
-                                    return;
-                                } else {
-                                    Log.v("TrackActivity",artist.name.toLowerCase().replace(" ", "") + " to " + artistQuery.toLowerCase().replace(" ", ""));
-                                    Log.v("TrackActivity", artist.name + " : " + track.name);
-                                }
-                            }
-                        }
-                    }
-                });
-
+        cancelBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                moveToRecordingActivity();
             }
         });
 
 
+    }
 
+    public void retrieveSongFromSpotify(SpotifyService spotify, final String artistQuery, final String songQuery) {
+        Log.v("TrackActivity", artistQuery + " " + songQuery);
+        spotify.searchTracks(songQuery, new SpotifyCallback<TracksPager>() {
+            @Override
+            public void failure(SpotifyError spotifyError) {
+                Log.v("TrackActivity", "Error: " + spotifyError);
+                Toast.makeText(getApplicationContext(), "Song Not On Spotify :(", Toast.LENGTH_SHORT).show();
+                trackTV.setText(getIntent().getStringExtra("song") + " Not On Spotify");
+                artistTV.setText(getIntent().getStringExtra("artist") + " Not On Spotify");
+            }
+
+            @Override
+            public void success(TracksPager tracksPager, Response response) {
+                List<Track> tracks = tracksPager.tracks.items;
+
+                if (tracks.size() == 0) {
+                    Toast.makeText(getApplicationContext(), "Song Not On Spotify :(", Toast.LENGTH_SHORT).show();
+                    trackTV.setText(getIntent().getStringExtra("song") + " Not On Spotify");
+                    artistTV.setText(getIntent().getStringExtra("artist") + " Not On Spotify");
+                    return;
+                }
+
+                for (Track track: tracks) {
+//                            Log.v("TrackActivity", track.name);
+                    List<ArtistSimple> artists = track.artists;
+                    for (ArtistSimple artist: artists) {
+                        if(artist.name.toLowerCase().replace(" ", "").equals(artistQuery.toLowerCase().replace(" ", ""))){
+                            Log.v("TrackActivity", "Track Selected: " + track.name);
+                            trackTV.setText(track.name);
+                            artistTV.setText(artist.name);
+                            Picasso.with(getApplicationContext()).load(track.album.images.get(0).url).into(trackAlbumIV);
+                            retrievedTrack = track;
+                            return;
+                        } else {
+//                            Log.v("TrackActivity",artist.name.toLowerCase().replace(" ", "") + " to " + artistQuery.toLowerCase().replace(" ", ""));
+//                            Log.v("TrackActivity", artist.name + " : " + track.name);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    public void saveSongToSpotifyPlaylist (SpotifyService spotify, Track track) {
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("uris", track.uri);
+        spotify.addTracksToPlaylist(USER_ID, PLAYLIST_ID, parameters, parameters, new SpotifyCallback<Pager<PlaylistTrack>>() {
+            @Override
+            public void failure(SpotifyError spotifyError) {
+                Log.v("TrackActivity", "Error: " + spotifyError);
+                Toast.makeText(getApplicationContext(), "Error: " + spotifyError, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void success(Pager<PlaylistTrack> playlistTrackPager, Response response) {
+                Log.v("TrackActivity", "Successfully added to playlist");
+                Toast.makeText(getApplicationContext(), "Saved To Spotify Playlist :)", Toast.LENGTH_LONG).show();
+                moveToRecordingActivity();
+                return;
+            }
+        });
+    }
+
+    public void moveToRecordingActivity() {
+        finish();
     }
 
 }
