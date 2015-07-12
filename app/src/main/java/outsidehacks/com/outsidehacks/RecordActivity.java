@@ -53,12 +53,7 @@ public class RecordActivity extends ActionBarActivity implements AdapterView.OnI
     private static final String RECORDING_FILENAME = "recording.wav";
 
     private static final int RECORDING_LENGTH_SECONDS = 9;
-
-    private static final double CONFIDENCE_THRESH = 0.6;
-
-    private static final int RECORDER_SAMPLERATE = 44100;
-    private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_STEREO;
-    private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+    private static final double CONFIDENCE_THRESH = 0.5;
 
     private static String SPOTIFY_ACCESS_TOKEN;
     private static String SPOTIFY_USER_ID;

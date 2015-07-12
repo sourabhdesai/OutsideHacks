@@ -150,8 +150,6 @@ public class TrackActivity extends ActionBarActivity {
     }
 
     public void moveToRecordingActivity() {
-        Intent intent = new Intent(this, RecordActivity.class);
-        startActivity(intent);
         finish();
     }
 
