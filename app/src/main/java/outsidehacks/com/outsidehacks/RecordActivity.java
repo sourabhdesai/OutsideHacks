@@ -1,5 +1,6 @@
 package outsidehacks.com.outsidehacks;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
@@ -9,8 +10,12 @@ import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -19,8 +24,10 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import outsidehacks.com.outsidehacks.gracenote.ExtAudioRecorder;
@@ -38,7 +45,7 @@ import retrofit.mime.TypedFile;
 import retrofit.mime.TypedString;
 
 
-public class RecordActivity extends ActionBarActivity {
+public class RecordActivity extends ActionBarActivity implements AdapterView.OnItemSelectedListener {
 
     private static final String USER_ID_KEY = "gn_user_id";
     private static final String SHARED_PREFS_FILENAME = "spottrack_shared_prefs";
@@ -51,16 +58,33 @@ public class RecordActivity extends ActionBarActivity {
     private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_STEREO;
     private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
 
+    private String SPOTIFY_ACCESS_TOKEN;
+    private String SPOTIFY_USER_ID;
+    private String SPOTIFY_PLAYLIST_ID;
+
     private String userID = null;
 
     ImageButton recordButton = null;
+    TextView countdownTextView = null;
+    Spinner artistSpinner = null;
+
+    List<String> artistList = null;
+    String selectedArtist = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record);
 
+        SPOTIFY_ACCESS_TOKEN = getIntent().getStringExtra("ACCESS_TOKEN");
+        SPOTIFY_USER_ID = getIntent().getStringExtra("USER_ID");
+        SPOTIFY_PLAYLIST_ID = getIntent().getStringExtra("PLAYLIST_ID");
+
         this.recordButton = (ImageButton)this.findViewById(R.id.record_button);
+        this.countdownTextView = (TextView) this.findViewById(R.id.countdown_textview);
+        this.artistSpinner = (Spinner) this.findViewById(R.id.spin_artist);
+
+        this.loadAvailableArtists();
 
         final SharedPreferences sharedPrefs = getSharedPreferences(SHARED_PREFS_FILENAME, MODE_PRIVATE);
         String userID = sharedPrefs.getString(USER_ID_KEY, null);
@@ -106,6 +130,42 @@ public class RecordActivity extends ActionBarActivity {
         } else {
             this.setRecordButtonActive();
         }
+    }
+
+    private void loadAvailableArtists() {
+        GracenoteLiveIDService liveIDService = GracenoteLiveIDServiceProvider.getInstance();
+        liveIDService.GetLiveIDArtists(new Callback<Response>() {
+            @Override
+            public void success(Response response, Response _) {
+                try {
+                    JSONObject resObj = ResponseUtils.getResponseBodyJSON(response);
+                    JSONArray artistJSONArray = resObj.getJSONArray("artists");
+
+                    RecordActivity.this.artistList = new ArrayList<String>(artistJSONArray.length());
+
+                    for (int i = 0; i < artistJSONArray.length(); i++) {
+                        String artist = artistJSONArray.getString(i);
+                        artistList.add(artist);
+                    }
+
+                    ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(RecordActivity.this, android.R.layout.simple_spinner_item, artistList);
+                    artistSpinner.setAdapter(arrayAdapter);
+                    artistSpinner.setOnItemSelectedListener(RecordActivity.this);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    showErrorDialog();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    showErrorDialog();
+                }
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                error.printStackTrace();
+                showErrorDialog();
+            }
+        });
     }
 
     private void showErrorDialog() {
@@ -163,7 +223,7 @@ public class RecordActivity extends ActionBarActivity {
     }
 
     private String getSelectedArtist() {
-        return "Death Cab For Cutie";
+        return this.selectedArtist;
     }
 
     private void startRecording() {
@@ -186,53 +246,74 @@ public class RecordActivity extends ActionBarActivity {
         extAudioRecorder.prepare();
         extAudioRecorder.start();
 
-        new CountDownTimer(RECORDING_LENGTH_SECONDS * 1000, RECORDING_LENGTH_SECONDS * 1000 / 2) {
+        new CountDownTimer(RECORDING_LENGTH_SECONDS * 1000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                System.out.println("onTick: millisUntilFinished=" + millisUntilFinished);
+                long secondsTillFinish = millisUntilFinished / 1000;
+                RecordActivity.this.countdownTextView.setText(String.valueOf(secondsTillFinish));
+
             }
 
             @Override
             public void onFinish() {
                 System.out.println("Done Recording");
+                RecordActivity.this.countdownTextView.setText("");
                 // Stop recording and upload file
                 extAudioRecorder.stop();
                 extAudioRecorder.release();
                 recordButton.setImageDrawable(getResources().getDrawable(R.mipmap.mic_default_tan));
 
-                uploadRecordingFile(recordingFile, getSelectedArtist(), new Callback<JSONObject>() {
-                    @Override
-                    public void success(JSONObject result, Response response) {
-                        try {
-                            String artist = result.getString("artist");
-                            String song = result.getString("song");
+                String artist = getSelectedArtist();
 
-                            String msg = "Artist: " + artist + ", Song: " + song;
-                            System.out.println(msg);
+                if (artist == null) {
+                    Toast.makeText(RecordActivity.this, "Please Select an Artist", Toast.LENGTH_LONG).show();
+                } else {
+                    final ProgressDialog progress = new ProgressDialog(RecordActivity.this);
+                    progress.setTitle("Analyzing");
+                    progress.setMessage("Hittin up " + artist + "...");
+                    progress.show();
 
-                            Toast.makeText(RecordActivity.this, msg, Toast.LENGTH_LONG).show();
+                    uploadRecordingFile(recordingFile, artist, new Callback<JSONObject>() {
+                        @Override
+                        public void success(JSONObject result, Response response) {
 
-                            //startTrackActivity(artist, song);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            showErrorDialog();
+                            // To dismiss the dialog
+                            progress.dismiss();
+
+                            try {
+                                String artist = result.getString("artist");
+                                String song = result.getString("song");
+
+                                String msg = "Artist: " + artist + ", Song: " + song;
+                                System.out.println(msg);
+
+                                startTrackActivity(artist, song);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                showErrorDialog();
+                            }
                         }
-                    }
 
-                    @Override
-                    public void failure(RetrofitError error) {
-                        Toast.makeText(RecordActivity.this, "Couldn't find a match", Toast.LENGTH_LONG).show();
+                        @Override
+                        public void failure(RetrofitError error) {
 
-                        error.printStackTrace();
-                        byte[] bodyBuff = new byte[(int) error.getResponse().getBody().length()];
-                        try {
-                            error.getResponse().getBody().in().read(bodyBuff);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                            // To dismiss the dialog
+                            progress.dismiss();
+
+                            Toast.makeText(RecordActivity.this, "Couldn't find a match", Toast.LENGTH_LONG).show();
+
+                            error.printStackTrace();
+                            byte[] bodyBuff = new byte[(int) error.getResponse().getBody().length()];
+                            try {
+                                error.getResponse().getBody().in().read(bodyBuff);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            System.err.print("RetrofitError: \n" + new String(bodyBuff));
                         }
-                        System.err.print("RetrofitError: \n" + new String(bodyBuff));
-                    }
-                });
+                    });
+                }
+
             }
         }.start();
     }
@@ -242,6 +323,9 @@ public class RecordActivity extends ActionBarActivity {
         Intent trackIntent = new Intent(RecordActivity.this, TrackActivity.class);
         trackIntent.putExtra("artist", artist);
         trackIntent.putExtra("song", song);
+        trackIntent.putExtra("ACCESS_TOKEN", SPOTIFY_ACCESS_TOKEN);
+        trackIntent.putExtra("USER_ID", SPOTIFY_USER_ID);
+        trackIntent.putExtra("PLAYLIST_ID", SPOTIFY_PLAYLIST_ID);
         startActivity(trackIntent);
     }
 
@@ -280,4 +364,13 @@ public class RecordActivity extends ActionBarActivity {
         });
     }
 
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        this.selectedArtist = this.artistList.get(position);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
 }
